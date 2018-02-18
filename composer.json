@@ -1,0 +1,27 @@
+{
+    "name": "ggottwald/mirobot",
+    "description": "Control Xiaomi Mi Robot Vacuum",
+    "type": "library",
+    "require": {
+        "php": ">=7.0",
+        "ggottwald/miio": "~v0.1"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@github.com:ggottwald/MiIO.git"
+        }
+    ],
+    "license": "GNU AFFERO GENERAL PUBLIC LICENSE",
+    "authors": [
+        {
+            "name": "Götz Gottwald",
+            "email": "goetz.gottwald@gmx.net"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MiRobot\\": "src/"
+        }
+    }
+}
