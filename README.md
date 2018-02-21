@@ -1,19 +1,16 @@
 # MiRobot
 This package can control the Xiaomi Mi Robot Vacuum.
 
-# Example
+# Example for Laravel
 Get device info, status and start cleaning of mi robot vacuum
 
-    $robot = new Robot();
+    $miRobot = app(MiRobot::class);
     
-    $robot
-        ->setDeviceName('mirobot_vacuum')
-        ->setToken('00112233445566778899aabbccddeeff');
-    
-    $miRobot = new MiRobot();
+    $robot = $miRobot->createRobot('mirobot_vacuum', '00112233445566778899aabbccddeeff');
     
     $status = $miRobot->status($robot);
     $consumable = $miRobot->getConsumable($robot);
+    
     $miRobot->start($robot); // start cleaning
     
  
