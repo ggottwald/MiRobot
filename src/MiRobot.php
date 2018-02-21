@@ -82,11 +82,14 @@ class MiRobot
     public function setMode(Robot $robot)
     {
         $this->miIO->send($robot, 'get_custom_mode');
-        $mode = $this->miIO->read($robot)->done(function ($response) {
-                if ($response instanceof Response) {
-                    return $response->getResult()[0];
-                }
-            }) ?? 60;
+        $mode = $this->miIO->read($robot)
+                ->done(function ($response) {
+                    if ($response instanceof Response) {
+                        return $response->getResult()[0];
+                    }
+                }, function ($rejected) {
+
+                }) ?? 60;
 
         switch ($mode) {
             case 60:
@@ -118,16 +121,19 @@ class MiRobot
             && ($robot = $arguments[0]) instanceof Robot) {
             $this->miIO->send($robot, $this->commandList[$name]);
 
-            return $this->miIO->read($robot)->done(function ($response) use ($name) {
-                if ($response instanceof Response) {
-                    switch ($name) {
-                        case 'status':
-                            return new Status($response->getResult()[0]);
-                        case 'getConsumable':
-                            return new Consumable($response->getResult()[0]);
+            return $this->miIO->read($robot)
+                ->done(function ($response) use ($name) {
+                    if ($response instanceof Response) {
+                        switch ($name) {
+                            case 'status':
+                                return new Status($response->getResult()[0]);
+                            case 'getConsumable':
+                                return new Consumable($response->getResult()[0]);
+                        }
                     }
-                }
-            });
+                }, function ($rejected) {
+                    // TODO: error handling
+                });
         }
 
         return null;
