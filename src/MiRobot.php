@@ -7,6 +7,7 @@ use MiRobot\Models\Robot;
 use MiRobot\Models\Status;
 use MiIO\MiIO;
 use MiIO\Models\Response;
+use React\Promise\Promise;
 use Socket\Raw\Factory;
 
 /**
@@ -71,25 +72,26 @@ class MiRobot
      * @param string $token
      * @return Robot
      */
-    public function createRobot(string $deviceName, string $token)
+    public function createRobot(string $deviceName, string $token): Robot
     {
         return new Robot($this->socketFactory->createUdp4(), $deviceName, $token);
     }
 
     /**
      * @param Robot $robot
+     * @return Promise
      */
-    public function setMode(Robot $robot)
+    public function setMode(Robot $robot): Promise
     {
-        $this->miIO->send($robot, 'get_custom_mode');
-        $mode = $this->miIO->read($robot)
-                ->done(function ($response) {
-                    if ($response instanceof Response) {
-                        return $response->getResult()[0];
-                    }
-                }, function ($rejected) {
+        $mode = 60;
+        $this->miIO->send($robot, 'get_custom_mode')
+            ->done(function ($response) use (&$mode) {
+                if ($response instanceof Response) {
+                    $mode = $response->getResult()[0];
+                }
+            }, function ($rejected) {
 
-                }) ?? 60;
+            });
 
         switch ($mode) {
             case 60:
@@ -107,7 +109,7 @@ class MiRobot
                 break;
         }
 
-        $this->miIO->send($robot, 'set_custom_mode', [$mode]);
+        return $this->miIO->send($robot, 'set_custom_mode', [$mode]);
     }
 
     /**
@@ -117,18 +119,20 @@ class MiRobot
      */
     public function __call($name, $arguments)
     {
+        $result = null;
+
         if (array_key_exists($name, $this->commandList)
             && ($robot = $arguments[0]) instanceof Robot) {
-            $this->miIO->send($robot, $this->commandList[$name]);
 
-            return $this->miIO->read($robot)
-                ->done(function ($response) use ($name) {
+            $this->miIO->send($robot, $this->commandList[$name])
+                ->done(function ($response) use ($name, &$result) {
                     if ($response instanceof Response) {
                         switch ($name) {
                             case 'status':
-                                return new Status($response->getResult()[0]);
+                                $result = new Status($response->getResult()[0]);
+                                break;
                             case 'getConsumable':
-                                return new Consumable($response->getResult()[0]);
+                                $result = new Consumable($response->getResult()[0]);
                         }
                     }
                 }, function ($rejected) {
@@ -136,6 +140,6 @@ class MiRobot
                 });
         }
 
-        return null;
+        return $result;
     }
 }
